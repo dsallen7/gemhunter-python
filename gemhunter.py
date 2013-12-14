@@ -35,7 +35,7 @@ class Board():
             self.grid += [ row ]
         
         self.board = pygame.Surface( (400,400) )
-        
+        self.highmark = DIM
         self.visited = []
     
     def getGridEntry(self,y,x):
@@ -99,6 +99,7 @@ class Board():
     def deleteCol(self,x):
         for i in range(DIM):
             self.grid[i] = self.grid[i][:x] + self.grid[i][x+1:] + ['o']
+        self.highmark -= 1
     
     def getCol(self,x):
         col = ''
@@ -106,14 +107,16 @@ class Board():
             col += self.getGridEntry(x,j)
         return col
         
+    def printGrid(self):
+        for i in range(DIM):
+            print self.getCol(i)
     
     def updateGrid(self):
-        
         #cascading downward of pieces
         for i in range(DIM):
             col = self.getCol(i)
             z = 0
-            while col == 'o'*DIM:
+            while col == 'o'*DIM and i < self.highmark:
                 #collapsing
                 self.deleteCol(i)
                 col = self.getCol(i)
@@ -123,8 +126,6 @@ class Board():
                         col = 'o' + col[:idx] + col[idx+1:]
                 for idx in range( len(col) ):
                     self.setGridEntry(i, idx, col[idx] )
-        
-
 
 class Game():
     
@@ -148,6 +149,29 @@ class Game():
         if e.type == pygame.MOUSEBUTTONDOWN:
             self.makeMove()
     
+    def displayText(self):
+        textbox = pygame.Surface( (500,100) )
+        textline = range(4)
+        text1 = 'Current move: ' + str( len(self.currentMove) )
+        text2 = 'Color: ' + myBoard.getGridEntry(self.X,self.Y)
+        text3 = 'Pieces left: ' + str(self.piecesLeft)
+        text4 = 'Current points: ' + str(self.currentPoints)
+        text5 = 'Score: ' + str(self.score)
+        if pygame.font:
+            font = pygame.font.Font(None, 36)
+            text = font.render(text1, 1, (255, 255, 255))
+            textbox.blit(text, (0,0) )
+            text = font.render(text2, 1, (255, 255, 255))
+            textbox.blit(text, (200,0) )
+            text = font.render(text3, 1, (255, 255, 255))
+            textbox.blit(text, (0,50) )
+            text = font.render(text4, 1, (255, 255, 255))
+            textbox.blit(text, (200,50) )
+            text = font.render(text5, 1, (255, 255, 255))
+            textbox.blit(text, (300,0) )
+        textpos = (0,400)
+        screen.blit(textbox, textpos)
+        
     def updateMouse(self):
         pos = pygame.mouse.get_pos()
         
@@ -171,28 +195,6 @@ class Game():
                 screen.blit(moveBox, (x*20,y*20) )
         else:
             self.currentPoints = 0
-        
-        textbox = pygame.Surface( (500,100) )
-        textline = range(4)
-        text1 = 'Current move: ' + str( len(self.currentMove) )
-        text2 = 'Color: ' + myBoard.getGridEntry(self.X,self.Y)
-        text3 = 'Pieces left: ' + str(self.piecesLeft)
-        text4 = 'Current points: ' + str(self.currentPoints)
-        text5 = 'Score: ' + str(self.score)
-        if pygame.font:
-            font = pygame.font.Font(None, 36)
-            text = font.render(text1, 1, (255, 255, 255))
-            textbox.blit(text, (0,0) )
-            text = font.render(text2, 1, (255, 255, 255))
-            textbox.blit(text, (200,0) )
-            text = font.render(text3, 1, (255, 255, 255))
-            textbox.blit(text, (0,50) )
-            text = font.render(text4, 1, (255, 255, 255))
-            textbox.blit(text, (200,50) )
-            text = font.render(text5, 1, (255, 255, 255))
-            textbox.blit(text, (300,0) )
-        textpos = (0,400)
-        screen.blit(textbox, textpos)
 
 myGame = Game()
 
@@ -209,5 +211,6 @@ def main():
                 myGame.EventHandler(e)
         myBoard.redraw()
         myGame.updateMouse()
+        myGame.displayText()
         pygame.display.flip()
 main()
